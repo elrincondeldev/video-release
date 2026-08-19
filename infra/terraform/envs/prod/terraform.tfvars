@@ -1,0 +1,5 @@
+prefix                = "rdr"
+environment           = "prod"
+region                = "eu-south-2"
+cognito_domain_prefix = "rdr-prod-auth"
+dev_frontend_url      = "http://localhost:5173"
