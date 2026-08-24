@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { getCurrentUser, signOut } from 'aws-amplify/auth'
 import Login from './components/Login'
+import { Button, Logo } from './components/ui'
 
 // Split the authenticated dashboard out of the login bundle.
 const Projects = lazy(() => import('./components/Projects'))
@@ -29,7 +30,7 @@ export default function App() {
   }
 
   if (status === 'loading') {
-    return <div className="grid min-h-screen place-items-center text-muted">Cargando…</div>
+    return <div className="grid min-h-screen place-items-center text-sm text-muted">Cargando…</div>
   }
 
   if (status === 'signedOut') {
@@ -37,14 +38,19 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4">
-      <header className="flex items-center justify-between border-b border-border py-3">
-        <strong className="font-semibold">Release Demo Recorder</strong>
-        <button onClick={handleSignOut} className="text-sm text-accent hover:underline">
-          Cerrar sesión
-        </button>
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-10 border-b border-border bg-bg/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <Logo size={22} />
+            <span className="text-sm font-medium tracking-tight">Release Demo Recorder</span>
+          </div>
+          <Button variant="ghost" onClick={handleSignOut}>
+            Cerrar sesión
+          </Button>
+        </div>
       </header>
-      <main className="py-6">
+      <main className="mx-auto max-w-3xl px-4 py-8">
         <Suspense fallback={<p className="text-sm text-muted">Cargando…</p>}>
           <Projects />
         </Suspense>

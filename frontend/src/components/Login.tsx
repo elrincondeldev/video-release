@@ -1,30 +1,14 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { confirmSignUp, signIn, signUp } from 'aws-amplify/auth'
 import { AnimatePresence, motion } from 'motion/react'
+import { Button, Logo, inputCls } from './ui'
 
 type Mode = 'signIn' | 'signUp' | 'confirm'
 
-const inputCls =
-  'w-full rounded-lg border border-border bg-black/20 px-3 py-2.5 text-sm outline-none transition focus:border-accent'
-
-function PrimaryButton({
-  busy,
-  onClick,
-  children,
-}: {
-  busy: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      disabled={busy}
-      onClick={onClick}
-      className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-110 disabled:opacity-60"
-    >
-      {busy ? '…' : children}
-    </button>
-  )
+const copy: Record<Mode, { title: string; subtitle: string }> = {
+  signIn: { title: 'Bienvenido de nuevo', subtitle: 'Inicia sesión para gestionar tus proyectos.' },
+  signUp: { title: 'Crea tu cuenta', subtitle: 'Empieza a grabar demos automáticamente.' },
+  confirm: { title: 'Verifica tu email', subtitle: 'Introduce el código que te hemos enviado.' },
 }
 
 export default function Login({ onSignedIn }: { onSignedIn: () => void }) {
@@ -68,87 +52,102 @@ export default function Login({ onSignedIn }: { onSignedIn: () => void }) {
       else setMode('signIn')
     })
 
+  const { title, subtitle } = copy[mode]
+
   return (
     <div className="grid min-h-screen place-items-center px-4">
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl"
+        initial={{ opacity: 0, y: 14, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-sm rounded-2xl border border-border bg-surface/40 p-7 shadow-2xl shadow-black/50 backdrop-blur-xl"
       >
-        <h1 className="mb-5 text-lg font-semibold">Release Demo Recorder</h1>
+        <div className="mb-6 flex items-center gap-2.5">
+          <Logo />
+          <span className="text-sm font-medium tracking-tight text-fg-muted">Release Demo Recorder</span>
+        </div>
 
         <AnimatePresence mode="wait">
           <motion.div
             key={mode}
-            initial={{ opacity: 0, x: 8 }}
+            initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col gap-3"
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
           >
-            {mode === 'confirm' ? (
-              <>
-                <p className="text-sm text-muted">
-                  Introduce el código que te hemos enviado por email.
-                </p>
-                <input
-                  className={inputCls}
-                  placeholder="Código de verificación"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                />
-                <PrimaryButton busy={busy} onClick={doConfirm}>
-                  Confirmar
-                </PrimaryButton>
-              </>
-            ) : (
-              <>
-                <input
-                  className={inputCls}
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <input
-                  className={inputCls}
-                  type="password"
-                  placeholder="Contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                {mode === 'signIn' ? (
-                  <>
-                    <PrimaryButton busy={busy} onClick={doSignIn}>
-                      Entrar
-                    </PrimaryButton>
-                    <p className="text-sm text-muted">
-                      ¿No tienes cuenta?{' '}
-                      <button className="text-accent hover:underline" onClick={() => setMode('signUp')}>
-                        Regístrate
-                      </button>
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <PrimaryButton busy={busy} onClick={doSignUp}>
-                      Crear cuenta
-                    </PrimaryButton>
-                    <p className="text-sm text-muted">
-                      ¿Ya tienes cuenta?{' '}
-                      <button className="text-accent hover:underline" onClick={() => setMode('signIn')}>
-                        Inicia sesión
-                      </button>
-                    </p>
-                  </>
-                )}
-              </>
-            )}
+            <h1 className="text-xl font-semibold tracking-tight text-fg">{title}</h1>
+            <p className="mt-1 mb-5 text-sm text-muted">{subtitle}</p>
+
+            <div className="flex flex-col gap-3">
+              {mode === 'confirm' ? (
+                <>
+                  <input
+                    className={inputCls}
+                    placeholder="Código de verificación"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    autoFocus
+                  />
+                  <Button onClick={doConfirm} disabled={busy}>
+                    {busy ? 'Verificando…' : 'Confirmar'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <input
+                    className={inputCls}
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <input
+                    className={inputCls}
+                    type="password"
+                    placeholder="Contraseña"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  {mode === 'signIn' ? (
+                    <>
+                      <Button onClick={doSignIn} disabled={busy}>
+                        {busy ? 'Entrando…' : 'Entrar'}
+                      </Button>
+                      <p className="text-center text-sm text-muted">
+                        ¿No tienes cuenta?{' '}
+                        <button className="font-medium text-accent hover:underline" onClick={() => setMode('signUp')}>
+                          Regístrate
+                        </button>
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Button onClick={doSignUp} disabled={busy}>
+                        {busy ? 'Creando…' : 'Crear cuenta'}
+                      </Button>
+                      <p className="text-center text-sm text-muted">
+                        ¿Ya tienes cuenta?{' '}
+                        <button className="font-medium text-accent hover:underline" onClick={() => setMode('signIn')}>
+                          Inicia sesión
+                        </button>
+                      </p>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
 
-        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+        {error && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-4 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
+          >
+            {error}
+          </motion.p>
+        )}
       </motion.div>
     </div>
   )
