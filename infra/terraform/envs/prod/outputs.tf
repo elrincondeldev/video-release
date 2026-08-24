@@ -26,6 +26,10 @@ output "frontend_bucket" {
   value = module.s3_frontend.bucket_name
 }
 
+output "cloudfront_distribution_id" {
+  value = module.s3_frontend.cloudfront_distribution_id
+}
+
 output "frontend_url" {
   value = module.s3_frontend.cloudfront_url
 }
@@ -44,4 +48,8 @@ output "ssm_parameter_names" {
 
 output "iam_role_arns" {
   value = module.iam.role_arns
+}
+
+output "api_url" {
+  value = module.api.api_url
 }

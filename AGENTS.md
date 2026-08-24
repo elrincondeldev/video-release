@@ -36,7 +36,7 @@ navigating the deployed app, stores it, and lets the user watch/download it.
 
 ## Target architecture (v1, serverless, scale-to-zero)
 
-- **Frontend**: React + Vite SPA on S3 + CloudFront.
+- **Frontend**: React + TypeScript + Vite SPA (Tailwind v4 + Motion) on S3 + CloudFront.
 - **Auth**: AWS Cognito (User Pool, OIDC). Backend validates JWT via JWKS.
 - **GitHub**: one **GitHub App** (not an OAuth App). Permissions: Contents:read,
   Metadata:read. Event: Release. Signed webhook. Gives release webhooks for all
@@ -107,6 +107,22 @@ infra/terraform/
   values set out-of-band with `aws ssm put-parameter`.
 - Lambdas run **outside** the VPC on purpose. Only Fargate uses the VPC.
 - Never commit `*.tfstate`, `*.pem`, or `.env` (see `.gitignore`).
+
+## Frontend conventions (`frontend/`)
+
+- **Stack**: React 18 + **TypeScript** (strict) + Vite. **Tailwind CSS v4** for styling
+  (via `@tailwindcss/vite`, `@import "tailwindcss"` in `src/index.css` — no `tailwind.config`
+  file; theme tokens live in an `@theme {}` block). **Motion** (`motion/react`) for animation.
+  Prefer these over plain CSS / other libraries for all new UI.
+- **TypeScript everywhere**: components are `.tsx`, no `.jsx`/`.js` sources. `build` runs
+  `tsc && vite build`, so type errors fail the build. Type API payloads in `src/types.ts`.
+- **Only one Vite config**: keep `vite.config.ts` (Vite prefers a stale `vite.config.js`
+  over it, which silently disables the Tailwind plugin). Never leave both.
+- **Optimize**: import Amplify from subpaths (`aws-amplify/auth`), code-split the
+  authenticated area with `React.lazy`, keep design tokens in `@theme`.
+- **Config via env**: all AWS IDs come from `VITE_*` vars (`.env`, gitignored). Build for
+  prod with `VITE_API_URL=<api_url>`; `scripts/deploy.sh` wires this automatically.
+- UI text stays in **Spanish**; code/comments in **English** (see global rules).
 
 ## Phase roadmap
 
