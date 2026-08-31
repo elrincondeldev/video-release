@@ -3,21 +3,20 @@ import { AnimatePresence, motion } from 'motion/react'
 import { api } from '../api'
 import type { Project, ProjectInput } from '../types'
 import { Button, Logo, inputCls } from './ui'
+import { GithubCard } from './GithubCard'
 
 interface FormState {
+  repo_url: string
+  deploy_url: string
   name: string
   description: string
-  repo_url: string
-  repo_full_name: string
-  deploy_url: string
 }
 
 const EMPTY: FormState = {
+  repo_url: '',
+  deploy_url: '',
   name: '',
   description: '',
-  repo_url: '',
-  repo_full_name: '',
-  deploy_url: '',
 }
 
 function cleanPayload(form: FormState): ProjectInput {
@@ -35,11 +34,20 @@ export default function Projects() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [githubConnected, setGithubConnected] = useState(false)
 
   const load = async () => {
     setError(null)
     try {
-      await api.me() // ensures the user profile exists on first login
+      // GitHub post-install redirect: link the installation to this user.
+      const params = new URLSearchParams(window.location.search)
+      const installationId = params.get('installation_id')
+      if (installationId) {
+        await api.linkGithub(installationId)
+        window.history.replaceState({}, '', window.location.pathname)
+      }
+      const me = await api.me() // also ensures the user profile exists on first login
+      setGithubConnected(me.github_connected)
       setProjects(await api.listProjects())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error')
@@ -55,11 +63,10 @@ export default function Projects() {
   const edit = (p: Project) => {
     setEditingId(p.id)
     setForm({
+      repo_url: p.repo_url ?? '',
+      deploy_url: p.deploy_url ?? '',
       name: p.name ?? '',
       description: p.description ?? '',
-      repo_url: p.repo_url ?? '',
-      repo_full_name: p.repo_full_name ?? '',
-      deploy_url: p.deploy_url ?? '',
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -99,18 +106,17 @@ export default function Projects() {
 
   return (
     <div className="flex flex-col gap-6">
+      {!loading && <GithubCard connected={githubConnected} />}
+
       <section className="rounded-2xl border border-border bg-surface/40 p-6 backdrop-blur-xl">
         <h2 className="mb-4 text-base font-semibold tracking-tight">
           {editingId ? 'Editar proyecto' : 'Nuevo proyecto'}
         </h2>
         <form onSubmit={submit} className="flex flex-col gap-3">
-          <input className={inputCls} placeholder="Nombre *" value={form.name} onChange={set('name')} required />
-          <input className={inputCls} placeholder="Descripción" value={form.description} onChange={set('description')} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input className={inputCls} placeholder="URL del repo (https://github.com/…)" value={form.repo_url} onChange={set('repo_url')} />
-            <input className={inputCls} placeholder="Repo (owner/repo)" value={form.repo_full_name} onChange={set('repo_full_name')} />
-          </div>
-          <input className={inputCls} placeholder="URL desplegada (https://…)" value={form.deploy_url} onChange={set('deploy_url')} />
+          <input className={inputCls} type="url" placeholder="URL del repo de GitHub (https://github.com/owner/repo) *" value={form.repo_url} onChange={set('repo_url')} required />
+          <input className={inputCls} type="url" placeholder="URL desplegada (https://…) *" value={form.deploy_url} onChange={set('deploy_url')} required />
+          <input className={inputCls} placeholder="Nombre (opcional, por defecto el del repo)" value={form.name} onChange={set('name')} />
+          <input className={inputCls} placeholder="Descripción (opcional)" value={form.description} onChange={set('description')} />
           <div className="mt-1 flex items-center gap-2">
             <Button type="submit">{editingId ? 'Guardar cambios' : 'Crear proyecto'}</Button>
             {editingId && (

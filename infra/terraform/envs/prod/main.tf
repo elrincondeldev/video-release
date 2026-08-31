@@ -66,5 +66,6 @@ module "api" {
     COGNITO_ISSUER    = module.cognito.issuer
     COGNITO_CLIENT_ID = module.cognito.client_id
     CORS_ORIGINS      = "${module.s3_frontend.cloudfront_url},${var.dev_frontend_url}"
+    SQS_QUEUE_URL     = module.sqs.queue_url
   }
 }

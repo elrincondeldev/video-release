@@ -7,6 +7,14 @@ from models import ProjectCreate, ProjectOut, ProjectUpdate
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
+def _require_github_repo(repo_url: str | None) -> None:
+    if repo_url and db.parse_repo_full_name(repo_url) is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "repo_url must be a GitHub repository URL (https://github.com/owner/repo)",
+        )
+
+
 @router.get("", response_model=list[ProjectOut])
 def list_projects(user: CurrentUser = Depends(get_current_user)):
     return db.list_projects(user.sub)
@@ -17,7 +25,9 @@ def create_project(
     body: ProjectCreate, user: CurrentUser = Depends(get_current_user)
 ):
     # mode="json" renders HttpUrl as str, which is what DynamoDB stores.
-    return db.create_project(user.sub, body.model_dump(mode="json"))
+    data = body.model_dump(mode="json")
+    _require_github_repo(data.get("repo_url"))
+    return db.create_project(user.sub, data)
 
 
 @router.get("/{project_id}", response_model=ProjectOut)
@@ -34,9 +44,9 @@ def update_project(
     body: ProjectUpdate,
     user: CurrentUser = Depends(get_current_user),
 ):
-    item = db.update_project(
-        user.sub, project_id, body.model_dump(mode="json", exclude_unset=True)
-    )
+    data = body.model_dump(mode="json", exclude_unset=True)
+    _require_github_repo(data.get("repo_url"))
+    item = db.update_project(user.sub, project_id, data)
     if item is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found")
     return item

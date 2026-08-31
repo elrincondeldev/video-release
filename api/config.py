@@ -16,5 +16,13 @@ class Settings:
         "https://d32bl6ndtgy703.cloudfront.net,http://localhost:5173",
     ).split(",")
 
+    sqs_queue_url: str = os.environ.get(
+        "SQS_QUEUE_URL",
+        "https://sqs.eu-south-2.amazonaws.com/447393541483/rdr-prod-recording",
+    )
+    github_webhook_secret_param: str = os.environ.get(
+        "GITHUB_WEBHOOK_SECRET_PARAM", "/rdr-prod/github_webhook_secret"
+    )
+
 
 settings = Settings()

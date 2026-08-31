@@ -9,14 +9,14 @@ export interface Project {
 }
 
 export interface ProjectInput {
-  name: string
+  repo_url: string
+  deploy_url: string
+  name?: string
   description?: string
-  repo_url?: string
-  repo_full_name?: string
-  deploy_url?: string
 }
 
 export interface Me {
   sub: string
   email: string | null
+  github_connected: boolean
 }
